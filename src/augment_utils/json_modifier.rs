@@ -4,55 +4,15 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 
-
+/// 修改遥测ID / Modify telemetry IDs / テレメトリIDを変更
+///
+/// 修改VS Code存储文件中的遥测机器ID和设备ID，并创建备份
+/// Modify telemetry machine ID and device ID in VS Code storage file and create backups
+/// VS Codeストレージファイル内のテレメトリマシンIDとデバイスIDを変更し、バックアップを作成
+///
+/// 返回值 / Returns / 戻り値:
+///     HashMap<String, String>: 包含旧ID、新ID和备份路径的结果 / Result containing old IDs, new IDs and backup paths / 古いID、新しいID、バックアップパスを含む結果
 pub fn modify_telemetry_ids() -> HashMap<String, String> {
-    /*
-    python:
-    storage_path = get_storage_path()
-    machine_id_path = get_machine_id_path()
-
-    if not os.path.exists(storage_path):
-        raise FileNotFoundError(f"Storage file not found at: {storage_path}")
-
-    # Create backups before modification
-    storage_backup_path = _create_backup(storage_path)
-    machine_id_backup_path = None
-    if os.path.exists(machine_id_path):
-        machine_id_backup_path = _create_backup(machine_id_path)
-
-    # Read the current JSON content
-    with open(storage_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-
-    # Store old values
-    old_machine_id = data.get('telemetry.machineId', '')
-    old_device_id = data.get('telemetry.devDeviceId', '')
-
-    # Generate new IDs
-    new_machine_id = generate_machine_id()
-    new_device_id = generate_device_id()
-
-    # Update the values in storage.json
-    data['telemetry.machineId'] = new_machine_id
-    data['telemetry.devDeviceId'] = new_device_id
-
-    # Write the modified content back to storage.json
-    with open(storage_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4)
-
-    # Write the new machine ID to the machine ID file
-    with open(machine_id_path, 'w', encoding='utf-8') as f:
-        f.write(new_device_id)
-
-    return {
-        'old_machine_id': old_machine_id,
-        'new_machine_id': new_machine_id,
-        'old_device_id': old_device_id,
-        'new_device_id': new_device_id,
-        'storage_backup_path': storage_backup_path,
-        'machine_id_backup_path': machine_id_backup_path
-    }
-     */
     // 获取存储路径和机器ID路径 / Get storage path and machine ID path / ストレージパスとマシンIDパスを取得
     let storage_path = get_storage_dir();
     let machine_id_path = get_machine_id_path();
@@ -69,31 +29,33 @@ pub fn modify_telemetry_ids() -> HashMap<String, String> {
     } else {
         None
     };
-    //Read the current JSON content
-    let mut file = File::open(&storage_path).expect("无法打开存储文件");
+
+    // 读取当前JSON内容 / Read the current JSON content / 現在のJSONコンテンツを読み取り
+    let mut file = File::open(&storage_path).expect("Failed to open storage file");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
-        .expect("无法读取文件内容");
-    let mut data: serde_json::Value = serde_json::from_str(&contents).expect("无法解析 JSON");
+        .expect("Failed to read file contents");
+    let mut data: serde_json::Value = serde_json::from_str(&contents).expect("Failed to parse JSON");
 
+    // 获取旧的ID值 / Get old ID values / 古いID値を取得
     let old_machine_id = data.get("telemetry.machineId").unwrap().as_str().unwrap().to_string();
     let old_device_id = data.get("telemetry.devDeviceId").unwrap().as_str().unwrap().to_string();
 
-    //update the values in storage.json
+    // 更新storage.json中的值 / Update the values in storage.json / storage.json内の値を更新
     let new_machine_id = generate_machine_id();
     let new_device_id = generate_device_id();
 
     data["telemetry.machineId"] = serde_json::Value::String(new_machine_id.clone());
     data["telemetry.devDeviceId"] = serde_json::Value::String(new_device_id.clone());
 
-    //Write the modified content back to storage.json
-    let updated_json = serde_json::to_string_pretty(&data).expect("无法序列化JSON");
-    std::fs::write(&storage_path, updated_json).expect("无法写入存储文件");
+    // 将修改后的内容写回storage.json / Write the modified content back to storage.json / 変更されたコンテンツをstorage.jsonに書き戻し
+    let updated_json = serde_json::to_string_pretty(&data).expect("Failed to serialize JSON");
+    std::fs::write(&storage_path, updated_json).expect("Failed to write storage file");
 
-    //Write the new machine ID to the machine ID file
-    let mut file = File::create(&machine_id_path).expect("无法创建machine ID文件");
+    // 将新的机器ID写入机器ID文件 / Write the new machine ID to the machine ID file / 新しいマシンIDをマシンIDファイルに書き込み
+    let mut file = File::create(&machine_id_path).expect("Failed to create machine ID file");
     file.write_all(new_device_id.as_bytes())
-        .expect("无法写入machine ID");
+        .expect("Failed to write machine ID");
 
     // 构建返回结果 / Build return result / 戻り値を構築
     let mut result = HashMap::new();
@@ -107,9 +69,7 @@ pub fn modify_telemetry_ids() -> HashMap<String, String> {
     result
 }
 
-/// 创建文件备份
-/// Create file backup
-/// ファイルバックアップを作成
+/// 创建文件备份 / Create file backup / ファイルバックアップを作成
 ///
 /// 使用时间戳创建文件的备份副本
 /// Create a backup copy of the file using timestamp
@@ -134,7 +94,7 @@ fn create_backup(file_path: &str) -> String {
     let backup_path = format!("{}.bak.{}", file_path, timestamp);
 
     // 复制文件到备份位置 / Copy file to backup location / ファイルをバックアップ場所にコピー
-    copy(file_path, &backup_path).expect("无法创建备份文件");
+    copy(file_path, &backup_path).expect("Failed to create backup file");
 
     backup_path
 }

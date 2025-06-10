@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 use crate::utils::paths::get_workspace_storage_path;
 
-/// 清理工作区存储
-/// Clean workspace storage
-/// ワークスペースストレージをクリーンアップ
+/// 清理工作区存储 / Clean workspace storage / ワークスペースストレージをクリーンアップ
 ///
 /// 创建工作区存储目录的备份，然后删除其中的所有文件和目录
 /// Create backup of workspace storage directory, then delete all files and directories within it
@@ -13,99 +11,7 @@ use crate::utils::paths::get_workspace_storage_path;
 ///     HashMap<String, String>: 包含备份路径、删除文件数量和操作状态的结果
 ///                              Result containing backup path, deleted files count and operation status
 ///                              バックアップパス、削除ファイル数、操作ステータスを含む結果
-pub fn clean_workspace_storage() -> HashMap<String,String>{
-    /*
-    python:
-    def clean_workspace_storage() -> dict:
-    workspace_path = get_workspace_storage_path()
-    
-    if not os.path.exists(workspace_path):
-        raise FileNotFoundError(f"Workspace storage directory not found at: {workspace_path}")
-    
-    # Convert to Path object for better path handling
-    workspace_path = Path(workspace_path)
-    
-    # Create backup filename with timestamp
-    timestamp = int(time.time())
-    backup_path = f"{workspace_path}_backup_{timestamp}.zip"
-    
-    # Create zip backup
-    failed_compressions = []
-    with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file_path in workspace_path.rglob('*'):
-            if file_path.is_file():
-                try:
-                    file_path_str = str(file_path)
-                    if os.name == 'nt':
-                        file_path_str = '\\\\?\\' + str(file_path.resolve())
-                    
-                    arcname = file_path.relative_to(workspace_path)
-                    zipf.write(file_path_str, str(arcname))
-                except (OSError, PermissionError, zipfile.BadZipFile) as e:
-                    failed_compressions.append({
-                        'file': str(file_path),
-                        'error': str(e)
-                    })
-                    continue
-    
-    # Count files before deletion
-    total_files = sum(1 for _ in workspace_path.rglob('*') if _.is_file())
-    
-    # Delete all files in the directory
-    failed_operations = []
-    
-    def handle_error(e: Exception, path: Path, item_type: str):
-        failed_operations.append({
-            'type': item_type,
-            'path': str(path),
-            'error': str(e)
-        })
-
-    # First attempt: Try to delete the entire directory tree at once
-    if not force_delete_directory(workspace_path):
-        # If bulk deletion fails, try the file-by-file approach
-        # Delete files first
-        for file_path in workspace_path.rglob('*'):
-            if file_path.is_file():
-                try:
-                    # Clear read-only attribute if present
-                    if os.name == 'nt':
-                        file_path_str = '\\\\?\\' + str(file_path.resolve())
-                        os.chmod(file_path_str, stat.S_IWRITE)
-                    else:
-                        os.chmod(str(file_path), stat.S_IWRITE)
-                    
-                    file_path.unlink(missing_ok=True)
-                except (OSError, PermissionError) as e:
-                    handle_error(e, file_path, 'file')
-
-        # Delete directories from deepest to root
-        dirs_to_delete = sorted(
-            [p for p in workspace_path.rglob('*') if p.is_dir()],
-            key=lambda x: len(str(x).split(os.sep)),
-            reverse=True
-        )
-        
-        for dir_path in dirs_to_delete:
-            try:
-                # Try force delete first
-                if not force_delete_directory(dir_path):
-                    # If force delete fails, try regular delete
-                    if os.name == 'nt':
-                        dir_path_str = '\\\\?\\' + str(dir_path.resolve())
-                        os.rmdir(dir_path_str)
-                    else:
-                        dir_path.rmdir()
-            except (OSError, PermissionError) as e:
-                handle_error(e, dir_path, 'directory')
-    
-    return {
-        'backup_path': str(backup_path),
-        'deleted_files_count': total_files,
-        'failed_operations': failed_operations,
-        'failed_compressions': failed_compressions
-    } 
-     */
+pub fn clean_workspace_storage() -> HashMap<String, String> {
     // 获取工作区存储路径 / Get workspace storage path / ワークスペースストレージパスを取得
     let workspace_path_str = get_workspace_storage_path();
 
@@ -141,9 +47,17 @@ pub fn clean_workspace_storage() -> HashMap<String,String>{
     result
 }
 
-/// 计算目录中的文件数量
-/// Count files in directory
-/// ディレクトリ内のファイル数をカウント
+/// 计算目录中的文件数量 / Count files in directory / ディレクトリ内のファイル数をカウント
+///
+/// 递归遍历目录并计算其中的文件总数
+/// Recursively traverse directory and count total number of files
+/// ディレクトリを再帰的に走査し、ファイルの総数をカウント
+///
+/// 参数 / Parameters / パラメータ:
+///     path: &std::path::Path - 要计算的目录路径 / Directory path to count / カウントするディレクトリパス
+///
+/// 返回值 / Returns / 戻り値:
+///     usize: 目录中的文件总数 / Total number of files in directory / ディレクトリ内のファイル総数
 fn count_files_in_directory(path: &std::path::Path) -> usize {
     use std::fs;
 
@@ -166,9 +80,18 @@ fn count_files_in_directory(path: &std::path::Path) -> usize {
     count_recursive(path)
 }
 
-/// 创建ZIP备份
-/// Create ZIP backup
-/// ZIPバックアップを作成
+/// 创建ZIP备份 / Create ZIP backup / ZIPバックアップを作成
+///
+/// 为指定目录创建ZIP格式的备份文件（简化实现）
+/// Create a ZIP format backup file for the specified directory (simplified implementation)
+/// 指定されたディレクトリのZIP形式のバックアップファイルを作成（簡略化実装）
+///
+/// 参数 / Parameters / パラメータ:
+///     source_path: &std::path::Path - 源目录路径 / Source directory path / ソースディレクトリパス
+///     backup_path: &str - 备份文件路径 / Backup file path / バックアップファイルパス
+///
+/// 返回值 / Returns / 戻り値:
+///     bool: 备份是否成功 / Whether backup was successful / バックアップが成功したかどうか
 fn create_zip_backup(source_path: &std::path::Path, backup_path: &str) -> bool {
     // 简化实现：这里只是创建一个标记文件表示备份已创建
     // Simplified implementation: just create a marker file to indicate backup was created
@@ -185,9 +108,17 @@ fn create_zip_backup(source_path: &std::path::Path, backup_path: &str) -> bool {
     }
 }
 
-/// 删除目录内容
-/// Delete directory contents
-/// ディレクトリの内容を削除
+/// 删除目录内容 / Delete directory contents / ディレクトリの内容を削除
+///
+/// 删除指定目录中的所有文件和子目录
+/// Delete all files and subdirectories in the specified directory
+/// 指定されたディレクトリ内のすべてのファイルとサブディレクトリを削除
+///
+/// 参数 / Parameters / パラメータ:
+///     path: &std::path::Path - 要清理的目录路径 / Directory path to clean / クリーンアップするディレクトリパス
+///
+/// 返回值 / Returns / 戻り値:
+///     bool: 删除操作是否成功 / Whether deletion operation was successful / 削除操作が成功したかどうか
 fn delete_directory_contents(path: &std::path::Path) -> bool {
     use std::fs;
 

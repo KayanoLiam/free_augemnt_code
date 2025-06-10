@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use crate::utils::paths::get_db_path;
 
-/// 清理Augment相关数据
-/// Clean Augment related data
-/// Augment関連データをクリーンアップ
+/// 清理Augment相关数据 / Clean Augment related data / Augment関連データをクリーンアップ
 ///
 /// 从SQLite数据库中删除所有包含'augment'关键字的记录，并创建备份
 /// Delete all records containing 'augment' keyword from SQLite database and create backup
@@ -12,35 +10,7 @@ use crate::utils::paths::get_db_path;
 ///
 /// 返回值 / Returns / 戻り値:
 ///     HashMap<String, String>: 包含备份路径和删除行数的结果 / Result containing backup path and deleted rows count / バックアップパスと削除行数を含む結果
-pub fn clean_augment_data() -> HashMap<String,String>{
-    /*
-    python:
-    db_path = get_db_path()
-    
-    # Create backup before modification
-    db_backup_path = _create_backup(db_path)
-    
-    # Connect to the database
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    try:
-        # Execute the delete query
-        cursor.execute("DELETE FROM ItemTable WHERE key LIKE '%augment%'")
-        deleted_rows = cursor.rowcount
-        
-        # Commit the changes
-        conn.commit()
-        
-        return {
-            'db_backup_path': db_backup_path,
-            'deleted_rows': deleted_rows
-        }
-    finally:
-        # Always close the connection
-        cursor.close()
-        conn.close()
-     */
+pub fn clean_augment_data() -> HashMap<String, String> {
     // 获取数据库路径 / Get database path / データベースパスを取得
     let db_path = get_db_path();
 
@@ -48,14 +18,14 @@ pub fn clean_augment_data() -> HashMap<String,String>{
     let db_backup_path = create_buckup(&db_path);
 
     // 连接到数据库 / Connect to database / データベースに接続
-    let conn = rusqlite::Connection::open(&db_path).expect("无法打开数据库");
+    let conn = rusqlite::Connection::open(&db_path).expect("Failed to open database");
 
     // 执行删除操作 / Execute delete operation / 削除操作を実行
     let deleted_rows = {
         // 准备SQL语句 / Prepare SQL statement / SQL文を準備
-        let mut stmt = conn.prepare("DELETE FROM ItemTable WHERE key LIKE '%augment%'").expect("无法准备SQL语句");
+        let mut stmt = conn.prepare("DELETE FROM ItemTable WHERE key LIKE '%augment%'").expect("Failed to prepare SQL statement");
         // 执行删除查询 / Execute delete query / 削除クエリを実行
-        stmt.execute([]).expect("无法执行SQL语句")
+        stmt.execute([]).expect("Failed to execute SQL statement")
     };
 
     // 显式关闭数据库连接 / Explicitly close database connection / データベース接続を明示的に閉じる
@@ -68,9 +38,7 @@ pub fn clean_augment_data() -> HashMap<String,String>{
     result
 }
 
-/// 创建文件备份
-/// Create file backup
-/// ファイルバックアップを作成
+/// 创建文件备份 / Create file backup / ファイルバックアップを作成
 ///
 /// 使用时间戳创建文件的备份副本
 /// Create a backup copy of the file using timestamp
@@ -82,13 +50,6 @@ pub fn clean_augment_data() -> HashMap<String,String>{
 /// 返回值 / Returns / 戻り値:
 ///     String: 备份文件的路径 / Path of the backup file / バックアップファイルのパス
 fn create_buckup(file_path: &str) -> String {
-    /*
-    对应的Python代码 / Corresponding Python code / 対応するPythonコード:
-    timestamp = int(time.time())
-    backup_path = f"{file_path}.bak.{timestamp}"
-    shutil.copy2(file_path, backup_path)
-    return backup_path
-     */
     use std::fs::copy;
     use std::time::SystemTime;
 
@@ -99,7 +60,7 @@ fn create_buckup(file_path: &str) -> String {
     let backup_path = format!("{}.bak.{}", file_path, timestamp);
 
     // 复制文件到备份位置 / Copy file to backup location / ファイルをバックアップ場所にコピー
-    copy(file_path, &backup_path).expect("无法创建备份文件");
+    copy(file_path, &backup_path).expect("Failed to create backup file");
 
     backup_path
 }

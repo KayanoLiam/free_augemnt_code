@@ -4,8 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-dirs = "6.0.0" #这个依赖用于获取系统路径
-serde_json = "1.0" #这个依赖用于解析JSON
-rand = "0.8.5" #这个依赖用于生成随机数
-hex = "0.4.3" #这个依赖用于将字节转换为十六进制字符串
-rusqlite = "0.29.0" #这个依赖用于操作SQLite数据库
+# 用于获取系统路径 / For getting system paths / システムパス取得用
+dirs = "6.0.0"
+# 用于解析JSON / For parsing JSON / JSON解析用
+serde_json = "1.0"
+# 用于生成随机数 / For generating random numbers / 乱数生成用
+rand = "0.8.5"
+# 用于将字节转换为十六进制字符串 / For converting bytes to hexadecimal strings / バイトを16進文字列に変換用
+hex = "0.4.3"
+# 用于操作SQLite数据库 / For operating SQLite database / SQLiteデータベース操作用
+rusqlite = "0.29.0"
