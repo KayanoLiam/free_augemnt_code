@@ -5,3 +5,7 @@ edition = "2024"
 
 [dependencies]
 dirs = "6.0.0" #这个依赖用于获取系统路径
+serde_json = "1.0" #这个依赖用于解析JSON
+rand = "0.8.5" #这个依赖用于生成随机数
+hex = "0.4.3" #这个依赖用于将字节转换为十六进制字符串
+rusqlite = "0.29.0" #这个依赖用于操作SQLite数据库
